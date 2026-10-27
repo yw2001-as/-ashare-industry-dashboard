@@ -1,0 +1,22 @@
+/* 合成演示数据：无网络请求，不读取真实行情缓存。 */
+(()=>{
+  const root=document.getElementById('market-flow-replay');
+  const cfg=JSON.parse(root.querySelector('#communications-config').textContent);
+  const date='2026-10-23',asOf=date+'T15:00:00+08:00';
+  const defs=[['BK1128','CPO概念',3.28,24.6],['BK1136','光通信模块',2.74,19.3],['BK0877','PCB',4.12,8.4],['BK1138','液冷服务器',2.18,13.8],['BK1168','铜缆高速连接',1.46,10.7],['BK1660','光纤概念',.92,28.4],['BK1088','F5G概念',1.62,21.8],['BK1002','激光雷达',2.86,16.2],['BK1185','冰雪经济',1.08,-3.5],['BK0847','影视概念',.48,11.6],['BK1654','文娱消费',-.34,9.1],['BK0519','稀缺资源',.72,14.7],['BK1109','供销社概念',.36,4.3],['BK1100','减速器',3.64,6.2],['BK1145','机器人执行器',3.92,7.5]];
+  const holidays=[['2026-09-25','2026-09-27'],['2026-10-01','2026-10-07']];
+  const dates=[];for(let t=new Date(date+'T00:00:00Z');dates.length<30;t.setUTCDate(t.getUTCDate()-1)){const iso=t.toISOString().slice(0,10),w=t.getUTCDay();if(w&&w!==6&&!holidays.some(([a,b])=>a<=iso&&iso<=b))dates.unshift(iso);}
+  const last5=dates.slice(-5),round=n=>Math.round(n*100)/100;
+  const split=main=>({main:round(main),xl:round(main*.67),lg:round(main-main*.67),md:round(-main*.42),sm:round(-main+main*.42)});
+  const all=defs.map(([id,name,pct,net],j)=>{const values=Array.from({length:240},(_,i)=>{const t=i+1,p=t/240,main=net*p+Math.sin(t/25+j)*Math.sin(Math.PI*p)*7;const minutes=t<=120?570+t:780+t-120;return {t,as_of:date+'T'+String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00+08:00',...split(main)};});const days=last5.map((d,i)=>({date:d,pct_change:i===4?pct:round(Math.sin(j*.8+i)*2.2),main_net_inflow_yi:i===4?net:round(Math.sin(j+i*.7)*net*.55)}));return {id,name,pct,as_of:asOf,quote_as_of:asOf,ranking_main:net,latest:split(net),values,days,errors:[]};});
+  const section=data=>({status:'ok',as_of:asOf,retrieved_at:asOf,source:'合成演示数据',data});
+  const breadth=dates.map((date,i)=>({date,up:Math.round(2600+Math.sin(i*.6)*1450),down:Math.round(2500-Math.sin(i*.6)*1450),flat:100,paused:10,limit_up:55,limit_down:6,observed_at:date+'T15:00:00+08:00',provisional:false,source:'合成演示数据'}));
+  const items=cfg.items.map((setting,j)=>{const b=all.find(x=>x.id===setting.id),days=b.days,stats={pct_5d:round((days.reduce((v,r)=>v*(1+r.pct_change/100),1)-1)*100),flow_5d:round(days.reduce((v,r)=>v+r.main_net_inflow_yi,0)),inflow_days:days.filter(r=>r.main_net_inflow_yi>0).length,pct_coverage:5,flow_coverage:5};return {...setting,...b,name:setting.name,stats,quote_status:'ok',stocks:[],assessment:{label:'演示价资同向',tone:'positive',reason:'仅展示版式及指标计算。所有行情、资金和历史均为合成数据。'}};});
+  const labels=['上证指数','深证成指','创业板指','沪深300','中证1000','科创50'],codes=['sh000001','sz399001','sz399006','sh000300','sh000852','sh000688'];
+  const indices=codes.map((id,j)=>({id,name:labels[j],price:round([3600,11000,2500,4000,6000,1200][j]*(1+(j+1)*.002)),pct:round((j+1)*.2),as_of:asOf,points:Array.from({length:241},(_,t)=>({t,v:round((j+1)*.2*t/240+Math.sin(t/32+j)*Math.sin(Math.PI*t/240)*.35)}))}));
+  const articles=[['domestic','国内宏观观察','演示资讯用于展示信息层级，真实运行后读取来源时间与原文。'],['domestic','交易所与行业动态','把重要市场消息集中在一处，减少来回切换窗口。'],['overseas','海外利率与汇率观察','此处没有真实事件或即时新闻，内容全部为演示。'],['overseas','全球科技资本开支观察','演示新闻不作为行情催化或投资结论。']].map(([region,title,summary])=>({region,title:'【演示】'+title,summary,category:region==='domestic'?'国内宏观与市场':'海外宏观与市场',source:'合成演示',published_at:asOf,published_label:'10-23 15:00',url:'https://github.com/yw2001-as/-ashare-industry-dashboard'}));
+  const snapshot={app:'industry-review-local-v1',server_time:asOf,completed_at:asOf,market_session:{phase:'closed_today',expected_date:date,label:'演示交易日'},breadth_history:{scope:'合成演示',items:breadth,missing:0},sections:{indices:section({items:indices,turnover_yi:18000}),breadth:section(breadth.at(-1)),concepts:section({ranking:'pct',items:[...all].sort((a,b)=>b.pct-a.pct).slice(0,10)}),fund_concepts:section({ranking:'flow',items:[...all].sort((a,b)=>b.ranking_main-a.ranking_main).slice(0,10)}),communications:section({items,dates:last5,target_date:date,classification:cfg.classification,fresh_boards:6}),news:section({checked_at:asOf,window_label:'合成资讯演示',items:articles})}};
+  root.querySelector('#industry-market-data').textContent=JSON.stringify(snapshot);
+  root.querySelector('#industry-breadth-data').textContent=JSON.stringify(snapshot.breadth_history);
+  root.querySelector('#industry-news-data').textContent=JSON.stringify(snapshot.sections.news.data);
+})();

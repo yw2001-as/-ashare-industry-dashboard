@@ -1,0 +1,12 @@
+{
+  "title": "通信与算力 · 固定细分观察",
+  "classification": "东方财富概念板块；属于通信与算力产业链观察口径，不是申万通信行业的互斥子行业。CPO、光模块等成分重叠，板块资金不能相加。",
+  "items": [
+    {"id":"BK1128","name":"CPO","provider_name":"CPO概念","role":"光互连封装","watch":"关注光引擎、封装与客户验证向量产收入的转化；概念入选不代表已有CPO收入。","risk":"技术路线、量产节奏和客户资本开支变化。","source_title":"中际旭创2026半年报","source_url":"https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-22/037d5232-a9bd-4ec3-a28e-e446195d65d9.PDF","stocks":[{"code":"300308","name":"中际旭创"},{"code":"300394","name":"天孚通信"}]},
+    {"id":"BK1136","name":"光通信模块","provider_name":"光通信模块","role":"数据传输","watch":"跟踪800G、1.6T等高速产品的交付、产品结构、毛利率与经营现金流。","risk":"高增速预期、客户集中与订单兑现不匹配。","source_title":"中际旭创2026半年报","source_url":"https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-22/037d5232-a9bd-4ec3-a28e-e446195d65d9.PDF","stocks":[{"code":"300308","name":"中际旭创"},{"code":"300502","name":"新易盛"}]},
+    {"id":"BK0877","name":"PCB","provider_name":"PCB","role":"高速板与互连载体","watch":"跟踪AI服务器、高速交换机用板需求，以及高阶板良率、扩产和毛利兑现。","risk":"扩产爬坡、良率与原材料成本影响盈利。","source_title":"沪电股份2026半年报","source_url":"https://static.cninfo.com.cn/finalpage/2026-08-26/1225502252.PDF","stocks":[{"code":"002463","name":"沪电股份"},{"code":"300476","name":"胜宏科技"}]},
+    {"id":"BK1138","name":"液冷","provider_name":"液冷服务器","role":"机房散热","watch":"关注机柜功率提升后的液冷交付、项目收入确认、毛利与回款。","risk":"验证周期、项目交付与收入确认存在时间差。","source_title":"英维克公司技术动态","source_url":"https://www.envicool.com/news/","stocks":[{"code":"002837","name":"英维克"},{"code":"301018","name":"申菱环境"}]},
+    {"id":"BK1168","name":"铜缆高速连接","provider_name":"铜缆高速连接","role":"短距电互连","watch":"关注高速铜互连的客户认证、规格升级、量产交付和相关业务占比。","risk":"光电互连适用距离与架构不同，不能把铜缆和光模块简单视为全面替代。","source_title":"沃尔核材2026半年报","source_url":"https://static.cninfo.com.cn/finalpage/2026-08-25/1225495716.PDF","stocks":[{"code":"002130","name":"沃尔核材"},{"code":"300563","name":"神宇股份"}]},
+    {"id":"BK1660","name":"光纤","provider_name":"光纤概念","role":"网络传输底座","watch":"跟踪运营商集采、数据中心互连、产品价格及海外交付。","risk":"传统通信周期与算力需求并不完全同步，需区分业务构成。","source_title":"中天科技2026半年报","source_url":"https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12558200&stockid=600522","stocks":[{"code":"600522","name":"中天科技"},{"code":"600487","name":"亨通光电"}]}
+  ]
+}

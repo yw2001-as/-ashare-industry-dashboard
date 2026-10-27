@@ -1,0 +1,26 @@
+# 本机环境与密钥
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 实时行情、个人归档和测试证据
+workspace/cache/*
+!workspace/cache/.gitkeep
+workspace/validation/
+workspace/data/breadth_history.json
+workspace/data/breadth_snapshot.json
+workspace/data/news_snapshot.json
+收盘数据/
+
+# 自动生成的本机页面；版式源在workspace/templates/
+dashboard.fragment.html
+snapshot.html
+index.html

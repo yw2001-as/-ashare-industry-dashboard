@@ -1,0 +1,210 @@
+<div id="market-flow-replay" aria-label="动态资金流一页复盘版式演示">
+  <style>
+    #market-flow-replay { --mf-red:#a51f34; --mf-ink:#19191b; --mf-paper:#fcfbf8; --mf-gray:#77736e; --mf-rule:#d9d5ce; background:var(--mf-paper); color:var(--mf-ink); font:13px/1.25 "Times New Roman","SimSun",serif; padding:20px 25px 15px; }
+    #market-flow-replay * { box-sizing:border-box; }
+    #market-flow-replay header { display:flex; align-items:center; justify-content:space-between; gap:18px; border-top:4px solid var(--mf-ink); border-bottom:1px solid var(--mf-ink); padding:11px 0 13px; }
+    #market-flow-replay h1 { font-size:27px; font-weight:500; margin:2px 0 3px; letter-spacing:1px; }
+    #market-flow-replay .kicker { font-size:11px; color:var(--mf-red); letter-spacing:2px; }
+    #market-flow-replay .stamp { text-align:right; padding-right:75px; }
+    #market-flow-replay .clock { font-size:25px; font-variant-numeric:tabular-nums; }
+    #market-flow-replay .muted { color:var(--mf-gray); font-size:11px; }
+    #market-flow-replay .metrics { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); padding:10px 0 7px; border-bottom:1px solid var(--mf-rule); gap:0; }
+    #market-flow-replay .metric { padding-left:14px; border-left:1px solid var(--mf-rule); }
+    #market-flow-replay .metric:first-child { padding-left:0; border:0; }
+    #market-flow-replay .metric-name { font-size:12px; }
+    #market-flow-replay .metric-value { font-size:24px; margin:3px 0; font-variant-numeric:tabular-nums; }
+    #market-flow-replay .index-spark { display:block; width:100%; height:31px; margin-top:3px; }
+    #market-flow-replay .positive { color:var(--mf-red); }
+    #market-flow-replay .negative { color:var(--mf-ink); }
+    #market-flow-replay .tape { display:flex; flex-wrap:wrap; gap:8px 25px; padding:9px 0; border-bottom:1px solid var(--mf-ink); font-size:12px; }
+    #market-flow-replay .tape b { font-weight:500; font-size:15px; margin-left:4px; }
+    #market-flow-replay .main { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); gap:18px; margin:12px 0 12px; }
+    #market-flow-replay h2 { font-size:15px; font-weight:500; margin:0; }
+    #market-flow-replay .section-head { display:flex; align-items:baseline; flex-wrap:wrap; justify-content:space-between; gap:7px; min-height:29px; border-bottom:1px solid var(--mf-rule); margin-bottom:6px; }
+    #market-flow-replay .section-no { color:var(--mf-red); margin-right:7px; }
+    #market-flow-replay .main-plot { display:block; width:100%; height:244px; overflow:visible; }
+    #market-flow-replay .focus-line { display:flex; align-items:baseline; gap:8px 15px; flex-wrap:wrap; padding:3px 0 5px; font-size:12px; }
+    #market-flow-replay .focus-line strong { font-weight:500; font-size:18px; }
+    #market-flow-replay .main-plot text { font-family:"Times New Roman","SimSun",serif; fill:var(--mf-gray); font-size:11px; }
+    #market-flow-replay .main-plot .end-label { fill:var(--mf-ink); font-size:11px; }
+    #market-flow-replay .transport { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; margin-top:7px; }
+    #market-flow-replay button { background:transparent; font:inherit; padding:6px 12px; border:1px solid var(--mf-rule); color:var(--mf-ink); border-radius:2px; }
+    #market-flow-replay button:focus-visible,#market-flow-replay select:focus-visible,#market-flow-replay input:focus-visible { outline:2px solid var(--mf-red); outline-offset:2px; }
+    #market-flow-replay .play { color:var(--mf-red); border-color:var(--mf-red); min-width:88px; }
+    #market-flow-replay input[type="range"] { width:100%; accent-color:var(--mf-red); min-width:0; }
+    #market-flow-replay .time-scale { display:flex; justify-content:space-between; font-size:11px; color:var(--mf-gray); padding:3px 0 0; }
+    #market-flow-replay table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; font-variant-numeric:tabular-nums; }
+    #market-flow-replay th { color:var(--mf-gray); font-weight:400; border-top:1px solid var(--mf-ink); border-bottom:1px solid var(--mf-rule); padding:6px 5px; text-align:right; }
+    #market-flow-replay td { padding:4px 5px; border-bottom:1px solid #e7e3dc; text-align:right; }
+    #market-flow-replay th:first-child,#market-flow-replay td:first-child { text-align:left; width:19%; }
+    #market-flow-replay tr.selected td { background:#f2e9e7; }
+    #market-flow-replay .name-button { border:0; padding:0; font:inherit; text-align:left; background:transparent; }
+    #market-flow-replay .fund-table { font-size:11px; }
+    #market-flow-replay .fund-table th:first-child,#market-flow-replay .fund-table td:first-child { width:24%; }
+    #market-flow-replay .fund-table td,#market-flow-replay .fund-table th { padding:6px 2px; }
+    #market-flow-replay .rank-no { display:inline-block; color:var(--mf-gray); width:19px; font-size:11px; }
+    #market-flow-replay .pct-cell { position:relative; }
+    #market-flow-replay .pct-fill { position:absolute; left:0; bottom:0; height:3px; background:#a51f34; opacity:.22; }
+    #market-flow-replay .pct-value { position:relative; }
+    #market-flow-replay .news-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+    #market-flow-replay .news-column h3 { font-size:13px; font-weight:500; margin:0; padding:4px 0 8px; border-bottom:1px solid var(--mf-rule); }
+    #market-flow-replay .news-item { padding:8px 0; border-bottom:1px solid #e7e3dc; }
+    #market-flow-replay .news-meta { display:flex; align-items:baseline; flex-wrap:wrap; gap:7px; color:var(--mf-gray); font-size:11px; margin-bottom:4px; }
+    #market-flow-replay .news-tag { color:var(--mf-red); }
+    #market-flow-replay .news-item a { font-size:13px; font-weight:500; color:var(--mf-ink); text-decoration:none; }
+    #market-flow-replay .news-item a:hover { color:var(--mf-red); text-decoration:underline; }
+    #market-flow-replay .news-item p { margin:4px 0 0; color:var(--mf-gray); font-size:11px; }
+    #market-flow-replay .scope-note { margin:6px 0 0; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay .history-section { margin-top:14px; }
+    #market-flow-replay .history-section .scope-note { margin:0 0 9px; }
+    #market-flow-replay .history-scroll { overflow-x:auto; }
+    #market-flow-replay .history-table { min-width:560px; }
+    #market-flow-replay .history-table th,#market-flow-replay .history-table td { padding:5px 6px; text-align:center; }
+    #market-flow-replay .history-table th:first-child { width:20%; text-align:left; }
+    #market-flow-replay .history-table thead th:first-child { position:sticky; left:0; background:var(--mf-paper); z-index:1; }
+    #market-flow-replay .history-table .board-cell { color:var(--mf-ink); border-top:0; border-bottom:1px solid #e7e3dc; background:var(--mf-paper); position:sticky; left:0; }
+    #market-flow-replay .history-table .history-pct { display:block; font-size:13px; font-weight:500; }
+    #market-flow-replay .history-table .history-flow { display:block; font-size:11px; margin-top:2px; }
+    #market-flow-replay .history-table .history-latest { border-top:2px solid var(--mf-red); color:var(--mf-ink); }
+    #market-flow-replay .history-table time { white-space:nowrap; }
+    #market-flow-replay .breadth { display:inline-flex; height:7px; width:65px; background:#b1ada7; vertical-align:middle; margin-left:6px; }
+    #market-flow-replay .breadth span { display:block; background:var(--mf-red); height:7px; }
+    #market-flow-replay footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:7px 20px; border-top:1px solid var(--mf-ink); margin-top:12px; padding-top:9px; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay .demo { color:var(--mf-red); }
+    #market-flow-replay .live-toolbar { display:none; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--mf-rule); }
+    #market-flow-replay.live-mode .live-toolbar { display:flex; }
+    #market-flow-replay.snapshot-mode .live-toolbar { border-left:3px solid var(--mf-red); padding-left:10px; }
+    #market-flow-replay.live-mode .stamp { padding-right:0; }
+    #market-flow-replay .fund-view-meta { display:flex; flex-wrap:wrap; gap:5px 14px; margin-top:5px; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay .fund-view-meta output { color:var(--mf-ink); font-variant-numeric:tabular-nums; }
+    #market-flow-replay .fund-missing-note { margin-top:5px; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay .main-plot { touch-action:pan-y; }
+    #market-flow-replay .fund-table .record-note { display:block; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay.funds-missing > .main .main-plot, #market-flow-replay .flow-ranking.funds-missing .main-plot { height:74px; }
+    #market-flow-replay .live-status { color:var(--mf-gray); font-size:11px; }
+    #market-flow-replay .refresh-live { white-space:nowrap; }
+    #market-flow-replay .live-link { color:var(--mf-red); font-size:12px; white-space:nowrap; }
+    #market-flow-replay .market-date { font-size:12px; color:var(--mf-gray); }
+    #market-flow-replay .breadth-panel { margin-top:12px; }
+    #market-flow-replay .breadth-plot { width:100%; height:190px; display:block; }
+    #market-flow-replay .breadth-plot text { font-family:"Times New Roman","SimSun",serif; font-size:11px; fill:var(--mf-gray); }
+    #market-flow-replay .breadth-detail { font-size:12px; min-height:23px; display:flex; flex-wrap:wrap; gap:6px 16px; padding:3px 0; }
+    #market-flow-replay .breadth-legend { display:flex; flex-wrap:wrap; gap:13px; font-size:11px; color:var(--mf-gray); }
+    #market-flow-replay .breadth-legend i { display:inline-block; width:8px; height:8px; margin-right:4px; background:var(--mf-red); }
+    #market-flow-replay .breadth-legend .down { background:var(--mf-ink); }
+    #market-flow-replay .panel-state { color:var(--mf-gray); font-size:12px; }
+    @media(max-width:760px) { #market-flow-replay { padding:16px; } #market-flow-replay .main,#market-flow-replay .news-grid { grid-template-columns:1fr; } #market-flow-replay .metrics { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 0; } #market-flow-replay .stamp { padding-right:0; } }
+    @media(max-width:430px) { #market-flow-replay header { display:block; } #market-flow-replay .stamp { display:flex; align-items:baseline; gap:12px; text-align:left; margin-top:8px; } #market-flow-replay h1 { font-size:24px; } #market-flow-replay .metric-value { font-size:21px; } #market-flow-replay .metric { padding-left:8px; } #market-flow-replay .fund-table td,#market-flow-replay .fund-table th { padding:5px 1px; } #market-flow-replay .fund-table th:first-child,#market-flow-replay .fund-table td:first-child { width:27%; } #market-flow-replay .transport { gap:7px; } #market-flow-replay button { padding:7px 8px; } #market-flow-replay .rank-no { width:15px; } }
+    @media(pointer:coarse) { #market-flow-replay .transport button { min-height:44px; } #market-flow-replay input { min-height:36px; } #market-flow-replay select { min-height:44px; } }
+  </style>
+  <header><div><div class="kicker">CHINA EQUITY / THEMES & NEWS</div><h1>A股 · 整体行业复盘</h1><div class="muted market-subtitle">大盘概况 / 概念涨幅Top10与资金 / 国内外新闻</div></div><div class="stamp"><div class="market-date"></div><div class="clock" aria-live="off">15:00</div><div class="muted demo market-state">行情回放示意 · 非实时</div></div></header>
+  <div class="live-toolbar"><span class="live-status" role="status">正在读取本机行情快照…</span><button class="refresh-live" type="button">立即更新</button><a class="live-link" href="http://127.0.0.1:8765/" target="_blank" rel="noopener noreferrer">打开盘中看板</a></div>
+  <section class="breadth-panel" aria-label="近30个交易日沪深A股涨跌家数">
+    <div class="section-head"><h2>市场宽度 · 近30个交易日</h2><div class="breadth-legend"><span><i></i>上涨</span><span><i class="down"></i>下跌</span><span>单位：家</span></div></div>
+    <div class="breadth-detail" aria-live="polite"></div>
+    <svg class="breadth-plot" role="img" aria-label="沪深A股近30个交易日的上涨及下跌家数，红柱在上，黑柱在下；指向或点按日期查看家数"></svg>
+    <div class="scope-note breadth-source">历史为收盘统计，最新交易日按数据源统计时间展示；口径：沪深A股。</div>
+  </section>
+  <div class="metrics" aria-label="指数概况，数值为模拟"></div>
+  <div class="tape" aria-label="市场概况，数值为模拟"></div>
+  <!-- communications:start --><style>
+  #market-flow-replay .communications-section { margin:14px 0 17px; border-top:3px solid var(--mf-red); padding-top:9px; }
+  #market-flow-replay .comm-kicker { color:var(--mf-red); font-size:10px; letter-spacing:1.5px; margin-bottom:3px; }
+  #market-flow-replay .communications-section h2 { font-size:18px; }
+  #market-flow-replay .comm-summary { padding:3px 0 7px; font-size:12px; line-height:1.6; }
+  #market-flow-replay .comm-summary strong { font-size:18px; font-weight:500; color:var(--mf-red); }
+  #market-flow-replay .comm-relative { font-size:12px; margin:0 0 8px; }
+  #market-flow-replay .comm-scroll { overflow-x:auto; }
+  #market-flow-replay .comm-table { min-width:690px; }
+  #market-flow-replay .comm-table th:first-child { width:23%; }
+  #market-flow-replay .comm-table th:last-child { width:20%; }
+  #market-flow-replay .comm-table td { padding:5px 7px; }
+  #market-flow-replay .comm-table small { display:block; font-size:10px; color:var(--mf-gray); margin-top:2px; }
+  #market-flow-replay .comm-select { padding:0; border:0; cursor:pointer; font-size:13px; }
+  #market-flow-replay .comm-state { font-size:11px; }
+  #market-flow-replay .comm-detail { display:grid; grid-template-columns:1.15fr 1.25fr .9fr; gap:20px; margin-top:12px; border-bottom:1px solid var(--mf-rule); padding-bottom:10px; }
+  #market-flow-replay .comm-detail h3 { margin:0 0 5px; font-size:13px; font-weight:500; }
+  #market-flow-replay .comm-detail p { margin:4px 0; font-size:11px; line-height:1.55; }
+  #market-flow-replay .comm-fund-split b { font-weight:500; white-space:nowrap; }
+  #market-flow-replay .comm-days { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-top:7px; }
+  #market-flow-replay .comm-day { text-align:center; padding:4px 1px; background:#f1eeea; font-size:10px; }
+  #market-flow-replay .comm-day time,#market-flow-replay .comm-day strong,#market-flow-replay .comm-day span { display:block; font-weight:400; }
+  #market-flow-replay .comm-day time { color:var(--mf-gray); margin-bottom:3px; }
+  #market-flow-replay .comm-source { font-size:10px; color:var(--mf-red); text-decoration:none; }
+  #market-flow-replay .comm-stock-list a { color:var(--mf-ink); text-decoration:none; display:grid; grid-template-columns:1fr auto; gap:3px; padding:6px 0; border-bottom:1px solid var(--mf-rule); font-size:11px; }
+  #market-flow-replay .comm-stock-list a>small { grid-column:1/-1; color:var(--mf-gray); font-size:10px; }
+  #market-flow-replay .comm-stock-list b { font-weight:500; }
+  #market-flow-replay .comm-scope,#market-flow-replay .comm-health { font-size:10px; line-height:1.5; color:var(--mf-gray); margin-top:5px; }
+  @media(max-width:760px) { #market-flow-replay .comm-detail { grid-template-columns:1fr; gap:13px; } #market-flow-replay .comm-table { min-width:650px; } }
+  @media print { #market-flow-replay .communications-section { break-inside:avoid; } }
+</style>
+<section class="communications-section" aria-label="固定通信与算力细分观察">
+  <div class="section-head"><div><div class="comm-kicker">FOCUS / COMMUNICATIONS & AI INFRASTRUCTURE</div><h2>通信与算力 · 固定细分观察</h2></div><span class="muted comm-asof">等待行情</span></div>
+  <div class="comm-summary" role="status"></div>
+  <p class="comm-relative"></p>
+  <div class="comm-scroll"><table class="comm-table" aria-label="六个固定通信细分的价资强弱，资金单位亿元"><thead><tr><th>细分方向</th><th>今日涨跌幅</th><th>主力净额 / 亿</th><th>5日涨跌幅</th><th>5日净额 / 亿</th><th>流入天数</th><th>量价观察</th></tr></thead><tbody></tbody></table></div>
+  <div class="comm-detail" aria-live="polite"></div>
+  <p class="comm-health"></p><p class="comm-scope"></p>
+</section>
+<!-- communications:end -->
+  <div class="main">
+    <section aria-label="细分概念涨幅前十的主力资金轨迹">
+      <div class="section-head"><h2><span class="section-no">01</span>涨幅Top10 · 主力资金轨迹</h2><span class="muted rank-scope">当前涨幅排名 / 亿元</span></div>
+      <div class="focus-line" aria-label="所选板块累计资金净额"></div>
+      <svg class="main-plot" role="img" aria-label="当前涨幅前十个细分概念的主力资金模拟轨迹，右侧直接标注板块和金额；涨幅排名与资金净流入排名不同"></svg>
+      <div class="fund-view-meta"><span>资金时间 <output class="fund-time">15:00</output><span class="fund-view-state"></span></span><span class="pct-snapshot-time"></span></div>
+      <div class="transport"><button class="play" type="button" aria-label="播放模拟资金流回放">播放回放</button><label style="min-width:0"><span class="muted">拖动时间轴或图中竖线</span><input class="scrubber" type="range" min="0" max="240" value="240" step="1" aria-label="资金回看时间，午休不计入"></label><button class="end" type="button">至收盘</button></div>
+      <div class="time-scale"><span>09:30</span><span>11:30 / 13:00 · 午休折叠</span><span>15:00</span></div>
+      <div class="fund-missing-note"></div>
+    </section>
+    <section aria-label="涨幅前十概念的四档资金明细">
+      <div class="section-head"><h2><span class="section-no">02</span>涨幅Top10 × 四档资金</h2><span class="muted rank-list-scope">金额：亿元 / 示意</span></div>
+      <table class="fund-table"><thead><tr><th>排名 / 板块</th><th>涨跌幅</th><th>主力净额</th><th>超大单</th><th>大单</th><th>中单</th><th>小单</th></tr></thead><tbody></tbody></table>
+      <div class="scope-note">主力 = 超大单 + 大单；点击板块突出左图曲线。概念成分可能重叠，资金不可直接相加。</div>
+    </section>
+  </div>
+  <section class="history-section" aria-label="当前Top10板块近5个交易日表现">
+    <div class="section-head"><h2><span class="section-no">03</span>近5个交易日 × 当前Top10</h2><span class="muted">上：涨跌幅 / 下：主力净流入（亿元）</span></div>
+    <p class="scope-note history-note"></p>
+    <div class="history-scroll"><table class="history-table" aria-label="10行板块、5列交易日，每格上方为涨跌幅，下方为主力资金净流入，模拟数据"></table></div>
+  </section>
+  <div class="flow-ranking" data-ranking="flow">
+  <p class="scope-note">产业概念资金榜 · 按当日累计主力净流入降序，单位亿元；与涨幅榜同口径，剔除金股、重仓、指数及风格标签。主力 = 超大单 + 大单，负值为净流出。</p>
+  <div class="main">
+    <section aria-label="细分概念资金净流入前十的主力资金轨迹">
+      <div class="section-head"><h2><span class="section-no">04</span>资金流入Top10 · 主力资金轨迹</h2><span class="muted rank-scope">当前主力净流入排名 / 亿元</span></div>
+      <div class="focus-line" aria-label="所选板块累计资金净额"></div>
+      <svg class="main-plot" role="img" aria-label="当前资金净流入前十个细分概念的主力资金模拟轨迹，右侧直接标注板块和金额；按当日累计主力净流入降序排列"></svg>
+      <div class="fund-view-meta"><span>资金时间 <output class="fund-time">15:00</output><span class="fund-view-state"></span></span><span class="pct-snapshot-time"></span></div>
+      <div class="transport"><button class="play" type="button" aria-label="播放模拟资金流回放">播放回放</button><label style="min-width:0"><span class="muted">拖动时间轴或图中竖线</span><input class="scrubber" type="range" min="0" max="240" value="240" step="1" aria-label="资金流入榜回看时间，午休不计入"></label><button class="end" type="button">至收盘</button></div>
+      <div class="time-scale"><span>09:30</span><span>11:30 / 13:00 · 午休折叠</span><span>15:00</span></div>
+      <div class="fund-missing-note"></div>
+    </section>
+    <section aria-label="资金净流入前十概念的四档资金明细">
+      <div class="section-head"><h2><span class="section-no">05</span>资金流入Top10 × 四档资金</h2><span class="muted rank-list-scope">金额：亿元 / 示意</span></div>
+      <table class="fund-table"><thead><tr><th>排名 / 板块</th><th>涨跌幅</th><th>主力净额</th><th>超大单</th><th>大单</th><th>中单</th><th>小单</th></tr></thead><tbody></tbody></table>
+      <div class="scope-note">主力 = 超大单 + 大单；点击板块突出左图曲线。概念成分可能重叠，资金不可直接相加。</div>
+    </section>
+  </div>
+  <section class="history-section" aria-label="资金流入Top10板块近5个交易日表现">
+    <div class="section-head"><h2><span class="section-no">06</span>近5个交易日 × 资金流入Top10</h2><span class="muted">上：涨跌幅 / 下：主力净流入（亿元）</span></div>
+    <p class="scope-note history-note"></p>
+    <div class="history-scroll"><table class="history-table" aria-label="10行板块、5列交易日，每格上方为涨跌幅，下方为主力资金净流入，模拟数据"></table></div>
+  </section>
+  </div>
+  <section class="news-section" aria-label="国内外宏观与市场新闻">
+    <div class="section-head"><h2><span class="section-no">07</span>国内外 · 最新资讯</h2><span class="muted news-asof"></span></div>
+    <div class="news-grid"><section class="news-column" data-region="domestic"><h3>国内宏观与市场</h3><div class="news-list"></div></section><section class="news-column" data-region="overseas"><h3>海外宏观与市场</h3><div class="news-list"></div></section></div>
+    <div class="scope-note">新闻为独立核验快照，发布时间不随行情回放改变；不表示这些消息驱动了示意行情。</div>
+  </section>
+  <footer><span class="demo">行情、排名及历史数据均为模拟；新闻为本次联网核验内容。</span><span>整体行业复盘 · 独立项目</span></footer>
+  <script type="application/json" id="industry-news-data">{}</script>
+  <script type="application/json" id="industry-history-data">{}</script>
+  <script type="application/json" id="industry-breadth-data">{}</script>
+  <script type="application/json" id="industry-market-data">{}</script>
+  <script type="application/json" id="communications-config">{}</script>
+  <script id="communications-panel"></script>
+  <script id="industry-fund-replay"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script id="industry-dashboard"></script>
+</div>
