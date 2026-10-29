@@ -40,7 +40,7 @@ def build():
     (ROOT / "snapshot.html").write_text(dashboard_html(market, "本机静态快照"), encoding="utf-8")
     # 演示只装配合成数据生成器，完全不读取本机真实行情。
     clean = (ROOT / "workspace/templates/dashboard.html").read_text(encoding="utf-8")
-    for element, value in (("communications-config", cfg), ("industry-news-data", empty_news), ("industry-history-data", {"dates": [], "boards": []}), ("industry-breadth-data", empty_breadth), ("industry-market-data", {"sections": {}})):
+    for element, value in (("communications-config", cfg), ("industry-news-data", {**empty_news, "checked_at": None}), ("industry-history-data", {"dates": [], "boards": []}), ("industry-breadth-data", empty_breadth), ("industry-market-data", {"sections": {}})):
         clean = embed(clean, element, value)
     demo = (ROOT / "workspace/scripts/demo-data.js").read_text(encoding="utf-8")
     for element, name in (("communications-panel", "communications_panel.js"), ("industry-fund-replay", "fund_replay.js"), ("industry-dashboard", "dashboard.js")):
