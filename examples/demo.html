@@ -198,7 +198,7 @@
     <div class="scope-note">新闻为独立核验快照，发布时间不随行情回放改变；不表示这些消息驱动了示意行情。</div>
   </section>
   <footer><span class="demo">行情、排名及历史数据均为模拟；新闻为本次联网核验内容。</span><span>整体行业复盘 · 独立项目</span></footer>
-  <script type="application/json" id="industry-news-data">{"checked_at": "2026-10-27T18:02:28+08:00", "window_label": "等待真实资讯", "items": []}</script>
+  <script type="application/json" id="industry-news-data">{"checked_at": "2026-10-29T12:52:07+08:00", "window_label": "等待真实资讯", "items": []}</script>
   <script type="application/json" id="industry-history-data">{"dates": [], "boards": []}</script>
   <script type="application/json" id="industry-breadth-data">{"scope": "沪深A股", "items": [], "missing": 0}</script>
   <script type="application/json" id="industry-market-data">{"sections": {}}</script>
@@ -407,6 +407,42 @@
       const plotThrough=s=>live?fundModel.through(s.fundPoints,minute,fundReview):s.values.filter(v=>v.t<=minute);
       const time=t=>{const m=t<=120?570+t:780+t-120;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
       const elSvg=root.querySelector('.main-plot');
+      let hovered=null,hoverSegments=[];
+      function highlightFunds(id=null){
+        hovered=id;
+        elSvg.dataset.hoverSector=id===null?'':String(id);
+        const active=id===null?null:String(id);
+        elSvg.querySelectorAll('.fund-curve,.fund-sample,.fund-endpoint').forEach(el=>{
+          const match=el.dataset.sector===active;
+          el.style.opacity=active===null?'':match?'1':'.16';
+          if(el.classList.contains('fund-curve'))el.style.strokeWidth=active===null?'':match?'4':'1.3';
+        });
+        elSvg.querySelectorAll('.end-label').forEach(el=>{
+          const match=el.dataset.sector===active;
+          el.style.opacity=active===null?'':match?'1':'.25';
+          el.style.fontWeight=match?'700':'';
+        });
+        root.querySelectorAll('.fund-table:first-of-type tbody tr').forEach(row=>{
+          // The price root also contains the independent flow ranking.
+          if(row.closest('.fund-table')!==root.querySelector('.fund-table'))return;
+          row.style.backgroundColor=active!==null&&row.querySelector('[data-sector]')?.dataset.sector===active?'#f2e0df':'';
+        });
+        const chosen=ranked.find(s=>String(s.id)===String(id===null?selected:id));
+        root.querySelector('.focus-line').innerHTML=chosen?`<span>${esc(chosen.name)}</span><strong class="${fundAt(chosen).main>=0?'positive':'negative'}">${num(fundAt(chosen).main)} 亿</strong><span class="muted">${active===null?'':'悬停板块 · '}当日累计主力净额</span>`:'<span class="panel-state">概念榜取数暂不可用 · 不显示模拟排名</span>';
+      }
+      function hoverFunds(event){
+        const label=event.target.closest?.('.end-label');
+        if(label){highlightFunds(label.dataset.sector);return;}
+        const [px,py]=d.pointer(event,elSvg);
+        let nearest=null,best=64;
+        for(const [id,ax,ay,bx,by] of hoverSegments){
+          const dx=bx-ax,dy=by-ay,len=dx*dx+dy*dy;
+          const t=len?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len)):0;
+          const dist=(px-ax-t*dx)**2+(py-ay-t*dy)**2;
+          if(dist<best){best=dist;nearest=id;}
+        }
+        if(String(nearest)!==String(hovered))highlightFunds(nearest);
+      }
       function breadthChart(){
         if(flowOnly)return;
         const el=root.querySelector('.breadth-plot'),width=el.getBoundingClientRect().width,height=190;
@@ -443,6 +479,7 @@
         root.querySelector('.breadth-source').textContent=`沪深A股 · 历史为收盘统计，最新日按数据源时间展示 · ${rows[0].date}—${last.date}${breadth.missing?` · ${breadth.missing}日缺测`:''} · 来源：乐咕乐股及已归档统计`;
       }
       function mainChart(){
+        hoverSegments=[];
         const width=elSvg.getBoundingClientRect().width,height=live&&!sectors.some(s=>s.fundPoints.length)?74:244;
         const left=43,top=14,bottom=30;
         const svg=d.select(elSvg).attr('viewBox',`0 0 ${width} ${height}`);svg.selectAll('*').remove();
@@ -476,16 +513,21 @@
           [visible.reduce((a,b)=>a.record.main>b.record.main?a:b),visible.reduce((a,b)=>a.record.main<b.record.main?a:b)].forEach(({s})=>{chunks(s).filter(v=>v.length>1).forEach(values=>svg.append('path').attr('d',d.area().x(v=>x(v.t)).y0(y(0)).y1(v=>y(v.main))(values)).attr('clip-path',`url(#${clipId})`).attr('fill',s.color).attr('opacity',.055));});
           visible.forEach(({s})=>{const pieces=chunks(s);svg.append('path').attr('data-sector',s.id).attr('class','fund-curve').attr('d',pieces.filter(values=>values.length>1).map(values=>line(values)).join('')).attr('clip-path',`url(#${clipId})`).attr('fill','none').attr('stroke',s.color).attr('stroke-width',selected===s.id?2.5:1.5).attr('stroke-dasharray',live?null:s.dash);pieces.filter(values=>values.length===1).forEach(values=>svg.append('circle').attr('class','fund-sample').attr('data-sector',s.id).attr('cx',x(values[0].t)).attr('cy',y(values[0].main)).attr('r',1.6).attr('fill',s.color).attr('opacity',.5));});
         }
+        visible.forEach(({s})=>{
+          const chunks=live?fundModel.segments(plotThrough(s)):[plotThrough(s)];
+          for(const points of chunks)points.forEach((p,i)=>{const q=points[Math.max(0,i-1)];hoverSegments.push([s.id,x(q.t),y(q.main),x(p.t),y(p.main)]);});
+        });
         svg.append('line').attr('x1',x(minute)).attr('x2',x(minute)).attr('y1',top).attr('y2',height-bottom).attr('stroke','#8b857e').attr('stroke-dasharray','3 4').attr('stroke-width',.7);
         const labels=visible.map(v=>({...v,value:v.record.main,py:y(v.record.main)})).sort((a,b)=>a.py-b.py);
         const gap=18;labels.forEach((v,i)=>{v.ly=Math.max(v.py,top+6,i?labels[i-1].ly+gap:top+6);});
         const excess=labels.length?labels[labels.length-1].ly-(height-bottom-3):0;if(excess>0){labels[labels.length-1].ly-=excess;for(let i=labels.length-2;i>=0;i--)labels[i].ly=Math.min(labels[i].ly,labels[i+1].ly-gap);}
         labels.forEach(v=>{
           const at=x(v.record.t??minute);
-          svg.append('circle').attr('cx',at).attr('cy',v.py).attr('r',selected===v.j?3.5:2.5).attr('fill',v.record.kind==='quote'?'var(--mf-paper)':v.s.color).attr('stroke',v.s.color).attr('stroke-width',1);
+          svg.append('circle').attr('class','fund-endpoint').attr('data-sector',v.s.id).attr('cx',at).attr('cy',v.py).attr('r',selected===v.j?3.5:2.5).attr('fill',v.record.kind==='quote'?'var(--mf-paper)':v.s.color).attr('stroke',v.s.color).attr('stroke-width',1);
           svg.append('text').attr('class','end-label').attr('data-sector',v.s.id).attr('data-fund-value',v.value).attr('data-record-asof',v.record.as_of||'').attr('data-fund-kind',v.record.kind||'series').attr('x',Math.min(x(minute)+11,width-right+11)).attr('y',v.ly+4).style('fill',v.s.color).text(v.text).append('title').text(`${v.s.name} ${num(v.value)}亿元 · ${v.record.as_of||time(v.record.t)}${v.record.kind==='quote'?' · 报价采样，非完整分钟轨迹':''}`);
         });
         svg.append('text').attr('x',left).attr('y',9).text('亿元');
+        highlightFunds(null);
       }
       function metrics(){
         if(flowOnly)return;
@@ -588,8 +630,9 @@
         if(x<Number(elSvg.dataset.plotStart)||x>Number(elSvg.dataset.plotEnd)||y<Number(elSvg.dataset.plotTop)||y>Number(elSvg.dataset.plotBottom))return;
         fundDrag=true;elSvg.setPointerCapture(event.pointerId);event.preventDefault();seek(pointerMinute(event));
       });
-      elSvg.addEventListener('pointermove',event=>{if(fundDrag)seek(pointerMinute(event));});
-      elSvg.addEventListener('pointerup',event=>{if(fundDrag){seek(pointerMinute(event));fundDrag=false;if(elSvg.hasPointerCapture(event.pointerId))elSvg.releasePointerCapture(event.pointerId);}});
+      elSvg.addEventListener('pointermove',event=>{if(fundDrag)seek(pointerMinute(event));else hoverFunds(event);});
+      elSvg.addEventListener('pointerleave',()=>highlightFunds(null));
+      elSvg.addEventListener('pointerup',event=>{if(fundDrag){seek(pointerMinute(event));fundDrag=false;if(elSvg.hasPointerCapture(event.pointerId))elSvg.releasePointerCapture(event.pointerId);}hoverFunds(event);});
       elSvg.addEventListener('pointercancel',()=>{fundDrag=false;});
       root.querySelector('.fund-table tbody').addEventListener('click',e=>{const button=e.target.closest('[data-sector]');if(button){selected=live?button.dataset.sector:Number(button.dataset.sector);render();}});
       document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});

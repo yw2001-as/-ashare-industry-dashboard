@@ -18,6 +18,8 @@
 | 04 / 05 / 06 | 主力资金轨迹、四档资金、5日矩阵 | 当日累计主力净流入 Top10 |
 | 07 | 国内外宏观与市场快讯 | 各自发布时间与来源 |
 
+01/04资金图支持鼠标悬停高亮：靠近曲线或右侧标签时，该曲线加粗、其他曲线淡化，并显示板块名称和当前回放时点的资金净额；移开恢复。原有拖动时间轴与播放回放保留。
+
 两榜使用同一产业主题范围，排除金股、重仓、指数和风格标签。CPO、F5G、PCB等是东方财富概念口径，成分可能重叠；它们不是互斥的申万行业，资金不能跨概念直接相加。
 
 ## 先看演示
@@ -59,7 +61,19 @@ python workspace/scripts/launch_dashboard.py
 python workspace/scripts/closing_archive.py
 ```
 
-项目没有自动安装操作系统计划任务；可自行让操作系统每天15:00运行上述命令。辅助JSON归档用于缓存恢复，日常查看HTML即可。
+Windows可双击 `保存收盘看板.bat` 手动归档，或双击 `安装收盘定时任务.bat`，安装每周一至周五北京时间15:00运行的本机任务。需要Windows时区为北京时间、电脑开机且用户已登录，无需Codex。脚本优先复用现有看板服务；未启动服务时自行采集。BAT优先使用项目的 `.venv`，其次使用 `py -3` 或PATH中的Python。
+
+任务名为 `AshareIndustryDashboard_ClosingHTML`。重复安装只更新同一目录的任务；若同名任务属于其他目录则停止。启用错过计划后补跑，但补跑保存的是实际运行时的界面，不能还原错过的15:00。日志在 `workspace/cache/closing_archive-task.log`。辅助JSON归档用于缓存恢复，日常查看HTML即可。
+
+## 自动同步代码到GitHub
+
+需要Git以及对origin仓库有写权限的登录，可通过Git Credential Manager登录。脚本使用本机Git认证，不保存token，也不依赖Codex。
+
+在Git克隆目录双击 `启动GitHub自动同步.bat`，后台每3秒检查一次，修改停止30秒后自动提交并推送当前分支；`立即同步GitHub.bat`执行一次。只监视已被Git跟踪的代码与说明，新文件需先明确加入Git。缓存、收盘数据、生成的实时页面和日志不参与同步。
+
+远端更新只允许快进；遇到冲突、认证失败或网络问题会记录错误并稍后重试，不强制覆盖远端。关闭终端不影响后台进程；重启后需重新启动，或自行加入Windows登录任务。日志和最新状态分别在 `workspace/cache/github-sync.log` 与 `workspace/cache/github-sync-status.json`。
+
+开发者本机的发布工程还支持 `workspace/release/publish-files.json` 白名单：通过已有发布构建器输出可移植代码，再同步至独立Git目录。该模式若检测到远端新增提交会暂停发布，需先与本机源文件核对合并。该模式的公开说明源位于 `workspace/release/`；不会把整个私人工作目录直接推上GitHub。
 
 ## 修改与检查
 
@@ -93,6 +107,8 @@ ashare-industry-dashboard/
 ├─ README.md / DATA_SOURCES.md      使用与数据口径
 ├─ requirements.txt               Python依赖
 ├─ 安装依赖.cmd / 启动实时看板.cmd
+├─ 保存收盘看板.bat / 安装收盘定时任务.bat
+├─ 启动GitHub自动同步.bat / 立即同步GitHub.bat
 ├─ examples/demo.html              合成数据离线演示
 ├─ docs/images/                    演示截图
 └─ workspace/
