@@ -71,7 +71,7 @@ Windows可双击 `保存收盘看板.bat` 手动归档，或双击 `安装收盘
 
 在Git克隆目录双击 `启动GitHub自动同步.bat`，后台每3秒检查一次，修改停止30秒后自动提交并推送当前分支；`立即同步GitHub.bat`执行一次。只监视已被Git跟踪的代码与说明，新文件需先明确加入Git。缓存、收盘数据、生成的实时页面和日志不参与同步。
 
-远端更新只允许快进；遇到冲突、认证失败或网络问题会记录错误并稍后重试，不强制覆盖远端。关闭终端不影响后台进程；重启后需重新启动，或自行加入Windows登录任务。日志和最新状态分别在 `workspace/cache/github-sync.log` 与 `workspace/cache/github-sync-status.json`。
+远端更新只允许快进；遇到冲突、认证失败或网络问题会记录错误并稍后重试，不强制覆盖远端。同一目录重复启动会保留已有后台实例，避免重复提交。关闭终端不影响后台进程；重启后需重新启动，或自行加入Windows登录任务。日志和最新状态分别在 `workspace/cache/github-sync.log` 与 `workspace/cache/github-sync-status.json`。
 
 开发者本机的发布工程还支持 `workspace/release/publish-files.json` 白名单：通过已有发布构建器输出可移植代码，再同步至独立Git目录。该模式若检测到远端新增提交会暂停发布，需先与本机源文件核对合并。该模式的公开说明源位于 `workspace/release/`；不会把整个私人工作目录直接推上GitHub。
 
