@@ -65,15 +65,17 @@ Windows可双击 `保存收盘看板.bat` 手动归档，或双击 `安装收盘
 
 任务名为 `AshareIndustryDashboard_ClosingHTML`。重复安装只更新同一目录的任务；若同名任务属于其他目录则停止。启用错过计划后补跑，但补跑保存的是实际运行时的界面，不能还原错过的15:00。日志在 `workspace/cache/closing_archive-task.log`。辅助JSON归档用于缓存恢复，日常查看HTML即可。
 
-## 自动同步代码到GitHub
+## 手动同步代码到GitHub
 
-需要Git以及对origin仓库有写权限的登录，可通过Git Credential Manager登录。脚本使用本机Git认证，不保存token，也不依赖Codex。
+GitHub同步只在明确执行命令时运行。项目不包含后台监视、自动推送或GitHub同步登录任务。
 
-在Git克隆目录双击 `启动GitHub自动同步.bat`，后台每3秒检查一次，修改停止30秒后自动提交并推送当前分支；`立即同步GitHub.bat`在后台监视未运行时执行一次。只监视已被Git跟踪的代码与说明，新文件需先明确加入Git。缓存、收盘数据、生成的实时页面和日志不参与同步。
+需要Git以及对origin仓库有写权限的登录，可通过Git Credential Manager登录。双击 `立即同步GitHub.bat` 执行一次，或运行：
 
-远端更新只允许快进；遇到冲突、认证失败或网络问题会记录错误并稍后重试，不强制覆盖远端。同一目录重复启动会保留已有后台实例，避免重复提交。关闭终端不影响后台进程；重启后需重新启动，或自行加入Windows登录任务。日志和最新状态分别在 `workspace/cache/github-sync.log` 与 `workspace/cache/github-sync-status.json`。
+```bash
+python workspace/scripts/git_auto_sync.py --once
+```
 
-开发者本机的发布工程还支持 `workspace/release/publish-files.json` 白名单：通过已有发布构建器输出可移植代码，再同步至独立Git目录。该模式若检测到远端新增提交会暂停发布，需先与本机源文件核对合并。该模式的公开说明源位于 `workspace/release/`；不会把整个私人工作目录直接推上GitHub。
+脚本只提交已跟踪且允许发布的文件；开发者本机发布工程使用 `workspace/release/publish-files.json` 清单，公开说明源位于 `workspace/release/`。缓存、收盘数据、实时页面和日志不参与同步。遇到远端新增提交、认证或网络错误会结束本次运行，需要处理后手动重试。最新手动同步结果保存在 `workspace/cache/github-sync-status.json`。
 
 ## 修改与检查
 
@@ -108,7 +110,7 @@ ashare-industry-dashboard/
 ├─ requirements.txt               Python依赖
 ├─ 安装依赖.cmd / 启动实时看板.cmd
 ├─ 保存收盘看板.bat / 安装收盘定时任务.bat
-├─ 启动GitHub自动同步.bat / 立即同步GitHub.bat
+├─ 立即同步GitHub.bat
 ├─ examples/demo.html              合成数据离线演示
 ├─ docs/images/                    演示截图
 └─ workspace/

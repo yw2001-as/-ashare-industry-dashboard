@@ -1,10 +1,9 @@
-"""Debounced Git synchronization; only explicitly published or already tracked files.
+"""Manual Git synchronization; only explicitly published or already tracked files.
 
 The local authoring project projects a portable release into a separate checkout.
-A normal clone watches tracked source files directly. No credentials are stored here.
+A normal clone publishes tracked source files once. No credentials are stored here.
 """
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -77,18 +76,11 @@ def plan():
     return projection, checkout, public, sorted(set(paths)), sources
 
 
-def fingerprint(sources):
-    h = hashlib.sha256()
-    for p in sorted(sources):
-        h.update(str(p).encode('utf-8'))
-        h.update(p.read_bytes() if p.is_file() else b'<missing>')
-    return h.hexdigest()
-
 
 def scan(path):
     data = path.read_bytes()
     if len(data) > 5_000_000:
-        raise ValueError('File exceeds automatic publish limit: ' + path.name)
+        raise ValueError('File exceeds publish limit: ' + path.name)
     if path.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp'):
         return
     text = data.decode('utf-8-sig')
@@ -113,7 +105,7 @@ def sync_once():
             run(['git', 'clone', '--branch', 'main', '--single-branch', REPO, str(checkout)], ROOT)
     remote = git(checkout, 'remote', 'get-url', 'origin').stdout.strip()
     if projection and remote != REPO:
-        raise ValueError('Unexpected origin; refusing automatic publication.')
+        raise ValueError('Unexpected origin; refusing publication.')
     branch = git(checkout, 'branch', '--show-current').stdout.strip()
     if not branch:
         raise ValueError('Detached HEAD; select a branch before syncing.')
@@ -136,7 +128,7 @@ def sync_once():
     git(checkout, 'add', '--all', '--', *paths)
     changed = git(checkout, 'diff', '--cached', '--name-only').stdout.strip()
     if changed:
-        git(checkout, '-c', 'user.name=Dashboard Auto Sync', '-c', 'user.email=dashboard-sync@localhost',
+        git(checkout, '-c', 'user.name=Dashboard Sync', '-c', 'user.email=dashboard-sync@localhost',
             'commit', '-m', 'Sync dashboard source ' + time.strftime('%Y-%m-%d %H:%M:%S'))
     # Also retries a previous successful commit whose push failed.
     git(checkout, 'push', 'origin', 'HEAD:' + branch)
@@ -145,53 +137,21 @@ def sync_once():
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--once', action='store_true')
-    parser.add_argument('--watch', action='store_true')
-    parser.add_argument('--start', action='store_true')
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='Manually publish approved dashboard files once.')
+    parser.add_argument('--once', action='store_true', help='Run one explicit synchronization.')
+    parser.parse_args()
     CACHE.mkdir(parents=True, exist_ok=True)
-    if args.start:
-        with (CACHE / 'github-sync.log').open('ab') as log:
-            subprocess.Popen([sys.executable, '-X', 'utf8', str(Path(__file__)), '--watch'], cwd=ROOT,
-                             stdout=log, stderr=log, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        print('GitHub sync watcher started. Log: workspace/cache/github-sync.log')
-        return
-    # OS lock is released on exit, including crashes; duplicate launchers are harmless.
     import msvcrt
     lock = (CACHE / 'github-sync.lock').open('a+b')
     lock.seek(0); lock.write(b'0'); lock.flush(); lock.seek(0)
     try:
         msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
     except OSError:
-        print('A GitHub sync process is already running.', flush=True)
+        print('Another manual synchronization is running.', flush=True)
         return
-    if not args.watch:
-        print(json.dumps(sync_once(), ensure_ascii=False), flush=True)
-        return
-    observed = None
-    synced = None
-    changed_at = time.monotonic()
-    retry_at = 0
-    while True:
-        try:
-            current = fingerprint(plan()[4])
-            now = time.monotonic()
-            if current != observed:
-                observed, changed_at = current, now
-            if observed != synced and now-changed_at >= 30 and now >= retry_at:
-                result = sync_once()
-                print(json.dumps({'time': time.strftime('%Y-%m-%d %H:%M:%S'), **result}, ensure_ascii=False), flush=True)
-                synced = observed
-                (CACHE / 'github-sync-status.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
-        except Exception as exc:
-            error = {'status': 'error', 'time': time.strftime('%Y-%m-%d %H:%M:%S'), 'message': str(exc)}
-            print(json.dumps(error, ensure_ascii=False), flush=True)
-            (CACHE / 'github-sync-status.json').write_text(json.dumps(error, ensure_ascii=False, indent=2), encoding='utf-8')
-            retry_at = time.monotonic() + 120
-            # Back off configuration/network errors too, not just push failures.
-            time.sleep(30)
-        time.sleep(3)
+    result = sync_once()
+    (CACHE / 'github-sync-status.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+    print(json.dumps(result, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
